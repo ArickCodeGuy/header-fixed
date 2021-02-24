@@ -10,6 +10,7 @@ headerElem.after(headerFake);
 headerElem.classList.add('position-fixed');
 headerResize = function () {
   if (headerHeight != headerElem.clientHeight) {
+    headerHeight = headerElem.clientHeight;
     headerFake.style.paddingTop = `${headerElem.clientHeight}px`;
   };
 };
