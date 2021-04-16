@@ -7,7 +7,7 @@ let defaults = {
 class StickyEl {
   constructor(el, options) {
     this.el = document.querySelectorAll(el);
-    this.options = JSON.parse(JSON.stringify(defaults));
+    this.options = {...defaults};
     this.setOptions(options);
     this.init(this.el);
   }
