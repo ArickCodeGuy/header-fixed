@@ -1,21 +1,35 @@
 'use strict';
-// .header position-fixed
-// add spacing to top
-// headerFake is fake header with top padding to prevent header overlapping body on top
+
+let defaults = {
+  topOffset: 0
+}
+
 class StickyEl {
-  constructor(el) {
+  constructor(el, options) {
     this.el = document.querySelectorAll(el);
+    this.options = JSON.parse(JSON.stringify(defaults));
+    this.setOptions(options);
     this.init(this.el);
+  }
+
+  setOptions(options) {
+    if (options) {
+      for (let option in options) {
+        this.options[option] = options[option];
+      };
+      return 'options set to your options obj'
+    }else {
+      return 'options set to default options'
+    }
   }
 
   isScrolled(el) {
     let elFake = this.getFake(el);
-    if (el.offsetTop < window.scrollY) {
+    if (el.dataset.stickyOffsetTop < window.scrollY) {
       el.classList.add('scrolled');
-      elFake ? elFake.style.display = 'block':false;
-
-      el.style.left = el.offsetLeft;
-      el.style.top = el.offsetTop;
+      elFake.style.display = 'block';
+      el.style.left = `${el.offsetLeft}px`;
+      el.style.top = `${this.options.topOffset}px`;
       el.style.position = 'fixed';
     }else {
       el.classList.remove('scrolled');
@@ -31,6 +45,12 @@ class StickyEl {
     elFake.style.display = 'none';
     elFake.style.height = `${el.clientHeight}px`;
     el.after(elFake);
+  }
+
+  addAttrs(el) {
+    let elOffset = el.offsetTop - this.options.topOffset
+    el.dataset.stickyOffsetTop = elOffset;
+    console.log(elOffset);
   }
 
   getFake(el) {
@@ -55,6 +75,7 @@ class StickyEl {
   init(elArr) {
     elArr.forEach((el) => {
       this.createFake(el);
+      this.addAttrs(el);
       this.addEvents(el);
     });
   }
