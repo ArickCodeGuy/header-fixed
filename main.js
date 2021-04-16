@@ -1,7 +1,8 @@
 'use strict';
 
 let defaults = {
-  topOffset: 0
+  topOffset: 0,
+  class: ''
 }
 
 class StickyEl {
@@ -42,6 +43,7 @@ class StickyEl {
   createFake(el) {
     let elFake = document.createElement('div');
     elFake.classList.add('fake-div');
+    this.options.class && typeof this.options.class === 'string' ? elFake.classList.add(this.options.class): false;
     elFake.style.display = 'none';
     elFake.style.height = `${el.clientHeight}px`;
     el.after(elFake);
