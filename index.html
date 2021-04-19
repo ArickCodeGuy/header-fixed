@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div class="header">
+    <div class="fixed-elem">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Rem quo laborum cum error, voluptas illo quidem temporibus nobis quas, cupiditate dolore numquam sequi. Dolores repellendus eaque, culpa perferendis provident, odio nemo assumenda! Officia quis asperiores cumque perspiciatis fugiat accusamus at cupiditate voluptatum ipsam iste expedita, ratione vel voluptatem pariatur quia ipsum, ut laboriosam dolorum. Quam totam earum quae facilis blanditiis molestias iste sint corporis explicabo adipisci similique, qui praesentium asperiores nulla obcaecati nesciunt? Enim sapiente sunt perferendis omnis ipsam, quod labore iusto, nulla velit debitis facere illo vero, accusamus. Repellat qui saepe voluptas quos vitae temporibus aut provident accusantium tempora.</div>
+  </div>
+  <div class="container">
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <div class="fixed-elem2"></div>
+  </div>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      height: 10000px;
+    }
+    .header {
+      padding-top: 40px;
+      margin-bottom: 80px;
+    }
+    .fixed-elem {
+      padding: 20px;
+      background-color: lightgrey;
+      opacity: .5;
+      width: 100%;
+    }
+    .fake-div {
+      background-color: lightblue;
+    }
+    .fixed-elem2 {
+      background-color: lightgrey;
+      opacity: .5;
+      width: 25%;
+      height: 500px;
+    }
+  </style>
+  <script src="main.js"></script>
+  <script>
+    let mySticky = new StickyEl('.fixed-elem', {
+      topOffset: 0,
+      class: 'some-class'
+    });
+    let mySticky2 = new StickyEl('.fixed-elem2', {
+      topOffset: 134
+    });
+  </script>
+</body>
+</html>
