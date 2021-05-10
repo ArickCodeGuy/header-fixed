@@ -20,9 +20,8 @@ class StickyEl {
     }else if (HTMLElement.prototype.isPrototypeOf(this.options.topOffset)) {
       topOffset = this.options.topOffset.clientHeight;
     };
-    this.iDontKnowHowToNameThisFunction(elObj);
-    const fixedPos = elObj.el.dataset.stickyOffsetTop - topOffset;
-    if (fixedPos  < window.scrollY) {
+    this.dataPositionSetter(elObj);
+    if (elObj.el.dataset.stickyOffsetTop - topOffset  < window.scrollY) {
       elObj.el.classList.add('scrolled');
       elObj.elFake.style.display = 'block';
       elObj.el.style.left = `${elObj.el.offsetLeft}px`;
@@ -44,7 +43,7 @@ class StickyEl {
     elObj.el.after(elObj.elFake);
   }
 
-  iDontKnowHowToNameThisFunction(elObj) {
+  dataPositionSetter(elObj) {
     // if position of element is set fo 'fixed', then use position of .fake-div
     if (elObj.el.style.position != 'fixed') {
       elObj.el.dataset.stickyOffsetTop = elObj.el.offsetTop;
@@ -69,7 +68,7 @@ class StickyEl {
       elFake: null
     };
     this.createFake(elObj);
-    this.iDontKnowHowToNameThisFunction(elObj);
+    this.dataPositionSetter(elObj);
     this.addEvents(elObj);
   }
 
