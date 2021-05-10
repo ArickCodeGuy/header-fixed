@@ -13,70 +13,64 @@ class StickyEl {
     this.options.init === true ? this.init(): false;
   }
 
-  isScrolled(el) {
-    const elFake = this.getFake(el);
+  isScrolled(elObj) {
     let topOffset;
     if (typeof this.options.topOffset === 'number') {
       topOffset = this.options.topOffset;
     }else if (HTMLElement.prototype.isPrototypeOf(this.options.topOffset)) {
       topOffset = this.options.topOffset.clientHeight;
     };
-    this.iDontKnowHowToNameThisFunction(el);
-    const fixedPos = el.dataset.stickyOffsetTop - topOffset;
+    this.iDontKnowHowToNameThisFunction(elObj);
+    const fixedPos = elObj.el.dataset.stickyOffsetTop - topOffset;
     if (fixedPos  < window.scrollY) {
-      el.classList.add('scrolled');
-      elFake.style.display = 'block';
-      el.style.left = `${el.offsetLeft}px`;
-      el.style.top = `${topOffset}px`;
-      el.style.position = 'fixed';
+      elObj.el.classList.add('scrolled');
+      elObj.elFake.style.display = 'block';
+      elObj.el.style.left = `${elObj.el.offsetLeft}px`;
+      elObj.el.style.top = `${topOffset}px`;
+      elObj.el.style.position = 'fixed';
     }else {
-      el.classList.remove('scrolled');
-      elFake ? elFake.style.display = 'none':false;
-      el.style.position = '';
+      elObj.el.classList.remove('scrolled');
+      elObj.elFake ? elObj.elFake.style.display = 'none':false;
+      elObj.el.style.position = '';
     };
   }
 
-  createFake(el) {
-    const elFake = document.createElement('div');
-    elFake.classList.add('fake-div');
-    this.options.fakeDivClass && typeof this.options.fakeDivClass === 'string' ? elFake.classList.add(this.options.fakeDivClass): false;
-    elFake.style.display = 'none';
-    elFake.style.height = `${el.clientHeight}px`;
-    el.after(elFake);
+  createFake(elObj) {
+    elObj.elFake = document.createElement('div');
+    elObj.elFake.classList.add('fake-div');
+    this.options.fakeDivClass && typeof this.options.fakeDivClass === 'string' ? elObj.elFake.classList.add(this.options.fakeDivClass): false;
+    elObj.elFake.style.display = 'none';
+    elObj.elFake.style.height = `${elObj.el.clientHeight}px`;
+    elObj.el.after(elObj.elFake);
   }
 
-  iDontKnowHowToNameThisFunction(el) {
-    if (el.style.position != 'fixed') {
-      el.dataset.stickyOffsetTop = el.offsetTop;
+  iDontKnowHowToNameThisFunction(elObj) {
+    // if position of element is set fo 'fixed', then use position of .fake-div
+    if (elObj.el.style.position != 'fixed') {
+      elObj.el.dataset.stickyOffsetTop = elObj.el.offsetTop;
     }else {
-      const fakeDiv = el.nextElementSibling;
-      el.dataset.stickyOffsetTop = fakeDiv.offsetTop;
+      elObj.el.dataset.stickyOffsetTop = elObj.elFake.offsetTop;
     }
   }
 
-  getFake(el) {
-    const elFake = el.nextElementSibling;
-    if (elFake.classList.contains('fake-div')) {
-      return elFake
-    }else {
-      return null
-    };
+  windowResize(elObj) {
+    elObj.elFake ? elObj.elFake.style.height = `${elObj.el.clientHeight}px`: false;
   }
 
-  windowResize(el) {
-    const elFake = this.getFake(el);
-    elFake ? elFake.style.height = `${el.clientHeight}px`: false;
-  }
-
-  addEvents(el) {
-    window.addEventListener('resize', () => this.windowResize(el));
-    window.addEventListener('scroll', () => this.isScrolled(el));
+  addEvents(elObj) {
+    window.addEventListener('resize', () => this.windowResize(elObj));
+    window.addEventListener('scroll', () => this.isScrolled(elObj));
   }
 
   initSingleElement(el) {
-    this.createFake(el);
-    this.iDontKnowHowToNameThisFunction(el);
-    this.addEvents(el);
+    // elObj is var that get's passed through all functions so we don't use querySelector each time we need some element
+    const elObj = {
+      el: el,
+      elFake: null
+    };
+    this.createFake(elObj);
+    this.iDontKnowHowToNameThisFunction(elObj);
+    this.addEvents(elObj);
   }
 
   initArray(arr) {
