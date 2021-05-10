@@ -49,10 +49,11 @@
   <script>
     let mySticky = new StickyEl('.fixed-elem', {
       topOffset: 0,
-      class: 'some-class'
+      fakeDivClass: 'some-class'
     });
     let mySticky2 = new StickyEl('.fixed-elem2', {
-      topOffset: 134
+      topOffset: document.querySelector('.fixed-elem')
+      // topOffset: 150
     });
   </script>
 </body>
