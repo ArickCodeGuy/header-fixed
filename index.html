@@ -34,7 +34,7 @@
       background-color: lightgrey;
       opacity: .5;
     }
-    .fake-div {
+    .sticky-el-fake {
       background-color: lightblue;
     }
     .fixed-elem2 {
@@ -49,12 +49,12 @@
     let mySticky = new StickyEl('.fixed-elem', {
       topOffset: 30,
       fakeDivClass: 'some-class',
-      stopElement: document.querySelector('.fixed-elem2')
+      // stopElement: document.querySelector('.fixed-elem2')
     });
-    // let mySticky2 = new StickyEl('.fixed-elem2', {
-      // topOffset: document.querySelector('.fixed-elem')
+    let mySticky2 = new StickyEl('.fixed-elem2', {
+      topOffset: document.querySelector('.fixed-elem')
       // topOffset: 150
-    // });
+    });
   </script>
 </body>
 </html>

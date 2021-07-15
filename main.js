@@ -10,101 +10,130 @@ let defaultOptions = {
 class StickyEl {
   constructor(el, options) {
     this.el = el;
+    this.$el = [];
     this.options = Object.assign({}, defaultOptions, options);
     this.options.init === true ? this.init(): false;
   }
 
-  #scrollEvent(elObj) {
-    if (!this.#stopElementFunc(elObj)) {
+  // binding eveng listeners
+  onScroll = e => this.handleScroll.call(this)
+  onResize = e => this.handleResize.call(this)
+
+  handleScroll() {
+    this.$el.forEach(el => {
+      const fake = this.getFake(el);
+
       let topOffset;
-      if (typeof this.options.topOffset === 'number') {
-        topOffset = this.options.topOffset;
-      }else if (HTMLElement.prototype.isPrototypeOf(this.options.topOffset)) {
-        topOffset = this.options.topOffset.clientHeight;
-      };
-      this.#dataPositionSetter(elObj);
-      if (elObj.el.dataset.stickyOffsetTop - topOffset  < window.scrollY) {
-        elObj.el.classList.add('scrolled');
-        elObj.elFake.style.display = 'block';
-        Object.assign(elObj.el.style, {
-          left: `${elObj.el.offsetLeft}px`,
+      typeof this.options.topOffset === 'number' ? topOffset = this.options.topOffset: false;
+      // this should be calculated better
+      if (HTMLElement.prototype.isPrototypeOf(this.options.topOffset)) {
+        let elPos = topOffset.getBoundingClientRect();
+        topOffset = this.options.topOffset.clientHeight + elPos.y;
+      }
+
+      if (el.dataset.stickyOffsetTop - topOffset  < window.scrollY) {
+        el.classList.add('scrolled');
+        fake.style.display = 'block';
+        Object.assign(el.style, {
+          left: `${el.offsetLeft}px`,
           top: `${topOffset}px`,
           position: 'fixed',
         })
       }else {
-        elObj.el.classList.remove('scrolled');
-        elObj.elFake ? elObj.elFake.style.display = 'none':false;
-        elObj.el.style.position = '';
+        el.classList.remove('scrolled');
+        fake.style.display = 'none';
+        el.style.position = '';
       };
-    };
+    })
   }
 
-  #stopElementFunc(elObj) {
-    let stopElement = this.options.stopElement;
-    if (HTMLElement.prototype.isPrototypeOf(stopElement)) {
-      const condition = 
-        scrollY > stopElement.offsetTop - elObj.el.offsetHeight - elObj.el.offsetTop;
-      if (condition) {
-        const pos = stopElement.offsetTop - elObj.el.offsetHeight - scrollY;
-        Object.assign(elObj.el.style, {
-          top: `${pos}px`
-        });
-      };
-      return condition
-    };
+  stopElementFunc(el) {
+    // if (!HTMLElement.prototype.isPrototypeOf(this.options.stopElement)) {throw 'stopElement is not an HTMLElement'};
+    // let stopElement = this.options.stopElement;
+    // const stopState = 
+    //   scrollY > stopElement.offsetTop - el.offsetHeight - el.offsetTop;
+    // if (stopState) {
+    //   const pos = stopElement.offsetTop - el.offsetHeight - scrollY;
+    //   Object.assign(el.style, {
+    //     top: `${pos}px`
+    //   });
+    // };
+    // return stopState
   }
 
-  #createFake(elObj) {
-    elObj.elFake = document.createElement('div');
-    elObj.elFake.classList.add('fake-div');
-    this.options.fakeDivClass && typeof this.options.fakeDivClass === 'string' ? elObj.elFake.classList.add(this.options.fakeDivClass): false;
-    elObj.elFake.style.display = 'none';
-    elObj.elFake.style.marginTop = elObj.el.style.marginTop;
-    elObj.elFake.style.marginBottom = elObj.el.style.marginBottom;
-    elObj.elFake.style.marginLeft = elObj.el.style.marginLeft;
-    elObj.elFake.style.marginRight = elObj.el.style.marginRight;
-    elObj.elFake.style.height = `${elObj.el.clientHeight}px`;
-    elObj.el.after(elObj.elFake);
+  createFake(el) {
+    const fake = document.createElement('div');
+    fake.classList.add('sticky-el-fake');
+    this.options.fakeDivClass && typeof this.options.fakeDivClass === 'string' ? fake.classList.add(this.options.fakeDivClass): false;
+    Object.assign(fake.style, {
+      display: 'none',
+      height: `${el.clientHeight}px`,
+      // needs to be computed not inline
+      // marginTop: elObj.el.style.marginTop,
+      // marginBottom: elObj.el.style.marginBottom,
+      // marginLeft: elObj.el.style.marginLeft,
+      // marginRight: elObj.el.style.marginRight,
+    })
+    el.after(fake);
   }
 
-  #dataPositionSetter(elObj) {
+  getFake(el) {
+    const fake = el.nextElementSibling;
+    if (!fake.classList.contains('sticky-el-fake')) {throw 'cant find fake div'};
+    return fake
+  }
+
+  dataPositionSetter(el) {
+    const style = getComputedStyle(el);
+    const fake = this.getFake(el);
     // if position of element is set fo 'fixed', then use position of .fake-div
-    if (elObj.el.style.position != 'fixed') {
-      elObj.el.dataset.stickyOffsetTop = elObj.el.offsetTop;
+    if (style.position !== 'fixed' || style.position !== 'absolute') {
+      el.dataset.stickyOffsetTop = el.offsetTop;
     }else {
-      elObj.el.dataset.stickyOffsetTop = elObj.elFake.offsetTop;
+      el.dataset.stickyOffsetTop = fake.offsetTop;
     }
   }
 
-  #windowResize(elObj) {
-    elObj.elFake ? elObj.elFake.style.height = `${elObj.el.clientHeight}px`: false;
+  handleResize() {
+    this.$el.forEach(el => {
+      const fake = this.getFake(el);
+      fake ? fake.style.height = `${el.clientHeight}px`: false;
+    });
   }
 
-  #addEvents(elObj) {
-    window.addEventListener('resize', () => this.#windowResize(elObj));
-    window.addEventListener('scroll', () => this.#scrollEvent(elObj));
+  addEvents() {
+    window.addEventListener('resize', this.onResize);
+    window.addEventListener('scroll', this.onScroll);
   }
 
-  #initSingleElement(el) {
+  initSingleElement(el) {
     // elObj is var that get's passed through all functions so we don't use querySelector each time we need some element
-    const elObj = {
-      el: el,
-      elFake: null
-    };
-    this.#createFake(elObj);
-    this.#dataPositionSetter(elObj);
-    this.#addEvents(elObj);
+    this.createFake(el);
+    this.dataPositionSetter(el);
   }
 
-  #initArray(arr) {
-    arr.forEach((el) => this.#initSingleElement(el));
+  initArray(arr) {
+    arr.forEach((el) => this.initSingleElement(el));
   }
 
   init() {
     // if string is specified
     if (typeof this.el === 'string') {
       const el = document.querySelectorAll(this.el);
-      el ? this.#initArray(el): false;
+      this.$el = [...el];
+      el ? this.initArray(el): false;
     };
+    this.addEvents();
+  };
+
+  destroy() {
+    window.removeEventListener('resize', this.onResize);
+    window.removeEventListener('scroll', this.onScroll);
+    this.$el.forEach(el => {
+      const fake = this.getFake(el);
+      fake.remove();
+      el.style = '';
+      el.removeAttribute('data-sticky-offset-top'); 
+    })
   }
 };
