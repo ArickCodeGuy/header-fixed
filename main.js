@@ -1,85 +1,139 @@
 'use strict';
 
-let defaults = {
-  topOffset: 0,
-  class: ''
+let defaultOptions = {
+  init: true, /*init or not init instantly*/
+  topOffset: 0, /*value in pixels or height of specified html element*/
+  fakeDivClass: '', /*add custom class to fake div (fake-div class still will be added)*/
+  stopElement: null /*specify html element on which sticky el should stop having position fixed and assign position absolute*/
 }
 
 class StickyEl {
   constructor(el, options) {
-    this.el = document.querySelectorAll(el);
-    this.options = {...defaults};
-    this.setOptions(options);
-    this.init(this.el);
+    this.el = el;
+    this.$el = [];
+    this.options = Object.assign({}, defaultOptions, options);
+    this.options.init === true ? this.init(): false;
   }
 
-  setOptions(options) {
-    if (options) {
-      for (let option in options) {
-        this.options[option] = options[option];
+  // binding eveng listeners
+  onScroll = e => this.handleScroll.call(this)
+  onResize = e => this.handleResize.call(this)
+
+  handleScroll() {
+    this.$el.forEach(el => {
+      const fake = this.getFake(el);
+
+      let topOffset;
+      typeof this.options.topOffset === 'number' ? topOffset = this.options.topOffset: false;
+      // this should be calculated better
+      if (HTMLElement.prototype.isPrototypeOf(this.options.topOffset)) {
+        let elPos = topOffset.getBoundingClientRect();
+        topOffset = this.options.topOffset.clientHeight + elPos.y;
+      }
+
+      if (el.dataset.stickyOffsetTop - topOffset  < window.scrollY) {
+        el.classList.add('scrolled');
+        fake.style.display = 'block';
+        Object.assign(el.style, {
+          left: `${el.offsetLeft}px`,
+          top: `${topOffset}px`,
+          position: 'fixed',
+        })
+      }else {
+        el.classList.remove('scrolled');
+        fake.style.display = 'none';
+        el.style.position = '';
       };
-      return 'options set to your options obj'
-    }else {
-      return 'options set to default options'
-    }
+    })
   }
 
-  isScrolled(el) {
-    let elFake = this.getFake(el);
-    if (el.dataset.stickyOffsetTop < window.scrollY) {
-      el.classList.add('scrolled');
-      elFake.style.display = 'block';
-      el.style.left = `${el.offsetLeft}px`;
-      el.style.top = `${this.options.topOffset}px`;
-      el.style.position = 'fixed';
-    }else {
-      el.classList.remove('scrolled');
-      elFake ? elFake.style.display = 'none':false;
-
-      el.style.position = '';
-    };
+  stopElementFunc(el) {
+    // if (!HTMLElement.prototype.isPrototypeOf(this.options.stopElement)) {throw 'stopElement is not an HTMLElement'};
+    // let stopElement = this.options.stopElement;
+    // const stopState = 
+    //   scrollY > stopElement.offsetTop - el.offsetHeight - el.offsetTop;
+    // if (stopState) {
+    //   const pos = stopElement.offsetTop - el.offsetHeight - scrollY;
+    //   Object.assign(el.style, {
+    //     top: `${pos}px`
+    //   });
+    // };
+    // return stopState
   }
 
   createFake(el) {
-    let elFake = document.createElement('div');
-    elFake.classList.add('fake-div');
-    this.options.class && typeof this.options.class === 'string' ? elFake.classList.add(this.options.class): false;
-    elFake.style.display = 'none';
-    elFake.style.height = `${el.clientHeight}px`;
-    el.after(elFake);
-  }
-
-  addAttrs(el) {
-    let elOffset = el.offsetTop - this.options.topOffset
-    el.dataset.stickyOffsetTop = elOffset;
-    console.log(elOffset);
+    const fake = document.createElement('div');
+    fake.classList.add('sticky-el-fake');
+    this.options.fakeDivClass && typeof this.options.fakeDivClass === 'string' ? fake.classList.add(this.options.fakeDivClass): false;
+    Object.assign(fake.style, {
+      display: 'none',
+      height: `${el.clientHeight}px`,
+      // needs to be computed not inline
+      // marginTop: elObj.el.style.marginTop,
+      // marginBottom: elObj.el.style.marginBottom,
+      // marginLeft: elObj.el.style.marginLeft,
+      // marginRight: elObj.el.style.marginRight,
+    })
+    el.after(fake);
   }
 
   getFake(el) {
-    let elFake = el.nextElementSibling;
-    if (elFake.classList.contains('fake-div')) {
-      return elFake
+    const fake = el.nextElementSibling;
+    if (!fake.classList.contains('sticky-el-fake')) {throw 'cant find fake div'};
+    return fake
+  }
+
+  dataPositionSetter(el) {
+    const style = getComputedStyle(el);
+    const fake = this.getFake(el);
+    // if position of element is set fo 'fixed', then use position of .fake-div
+    if (style.position !== 'fixed' || style.position !== 'absolute') {
+      el.dataset.stickyOffsetTop = el.offsetTop;
     }else {
-      return null
-    };
+      el.dataset.stickyOffsetTop = fake.offsetTop;
+    }
   }
 
-  windowResize(el) {
-    let elFake = this.getFake(el);
-    elFake ? elFake.style.height = `${el.clientHeight}px`: false;
-  }
-
-  addEvents(el) {
-    window.addEventListener('resize', () => this.windowResize(el));
-    window.addEventListener('scroll', () => this.isScrolled(el));
-  }
-
-  init(elArr) {
-    elArr.forEach((el) => {
-      this.createFake(el);
-      this.addAttrs(el);
-      this.addEvents(el);
+  handleResize() {
+    this.$el.forEach(el => {
+      const fake = this.getFake(el);
+      fake ? fake.style.height = `${el.clientHeight}px`: false;
     });
   }
 
+  addEvents() {
+    window.addEventListener('resize', this.onResize);
+    window.addEventListener('scroll', this.onScroll);
+  }
+
+  initSingleElement(el) {
+    // elObj is var that get's passed through all functions so we don't use querySelector each time we need some element
+    this.createFake(el);
+    this.dataPositionSetter(el);
+  }
+
+  initArray(arr) {
+    arr.forEach((el) => this.initSingleElement(el));
+  }
+
+  init() {
+    // if string is specified
+    if (typeof this.el === 'string') {
+      const el = document.querySelectorAll(this.el);
+      this.$el = [...el];
+      el ? this.initArray(el): false;
+    };
+    this.addEvents();
+  };
+
+  destroy() {
+    window.removeEventListener('resize', this.onResize);
+    window.removeEventListener('scroll', this.onScroll);
+    this.$el.forEach(el => {
+      const fake = this.getFake(el);
+      fake.remove();
+      el.style = '';
+      el.removeAttribute('data-sticky-offset-top'); 
+    })
+  }
 };

@@ -33,9 +33,8 @@
       padding: 20px;
       background-color: lightgrey;
       opacity: .5;
-      width: 100%;
     }
-    .fake-div {
+    .sticky-el-fake {
       background-color: lightblue;
     }
     .fixed-elem2 {
@@ -48,11 +47,13 @@
   <script src="main.js"></script>
   <script>
     let mySticky = new StickyEl('.fixed-elem', {
-      topOffset: 0,
-      class: 'some-class'
+      topOffset: 30,
+      fakeDivClass: 'some-class',
+      // stopElement: document.querySelector('.fixed-elem2')
     });
     let mySticky2 = new StickyEl('.fixed-elem2', {
-      topOffset: 134
+      topOffset: document.querySelector('.fixed-elem')
+      // topOffset: 150
     });
   </script>
 </body>
